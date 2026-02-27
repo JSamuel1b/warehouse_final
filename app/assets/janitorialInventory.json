@@ -1,0 +1,172 @@
+[
+  {
+    "SKU": 48678,
+    "product_name": "Disposable Coverall Medium /Each",
+    "location": "A1-01D-01"
+  },
+  {
+    "SKU": 48679,
+    "product_name": "Disposable Coverall Large /Each",
+    "location": "A1-01D-02"
+  },
+  {
+    "SKU": 48680,
+    "product_name": "Disposable Coverall XL /Each",
+    "location": "A1-01D-03"
+  },
+  {
+    "SKU": "CS485",
+    "product_name": "Vacuum Bag, For Super Coach Pro 6, GoFree Pro, and ProVac FS6 /Each Pack of 10",
+    "location": "A1-01D-04A"
+  },
+  {
+    "SKU": "CS420",
+    "product_name": "Vacuum Bag For Hip Hugger /Each Pack of 10",
+    "location": "A1-01D-04B"
+  },
+  {
+    "SKU": 64789,
+    "product_name": "Vacuum Bags Lavex /Each Pack of 9",
+    "location": "A1-01C-01"
+  },
+  {
+    "SKU": "CS425",
+    "product_name": "Vacuum Bag For Versamatic VS14 /Each Pack of 10",
+    "location": "A1-01C-02"
+  },
+  {
+    "SKU": 38784,
+    "product_name": "Vacuum Bag Sanitaire SC9180, S9100, and C4900 /Each Pack of 5",
+    "location": "A1-01C-02B"
+  },
+  {
+    "SKU": "CS430",
+    "product_name": "Vacuum Bag, Windsor For Versamatic VSP14 /Each Pack of 10",
+    "location": "A1-01C-03"
+  },
+  {
+    "SKU": 62713,
+    "product_name": "Vacuum Bag, ST Sanitaire/ 5/Pack",
+    "location": "A1-01C-04"
+  },
+  {
+    "SKU": 63393,
+    "product_name": "Vacuum Bag Lavex 12\" upright/ 9/Pack",
+    "location": "A1-01C-05"
+  },
+  {
+    "SKU": 64650,
+    "product_name": "Vacuum Bag Style LS/ 9/Pack",
+    "location": "A1-01C-06"
+  },
+  {
+    "SKU": "PP435",
+    "product_name": "Trash Bags Clear, 43\" x 48\" (200/Box",
+    "location": "A1-01B-01"
+  },
+  {
+    "SKU": "PP415",
+    "product_name": "Trash Bags Clear, 24\" x 24\" (1000/Box",
+    "location": "A1-01B-02"
+  },
+  {
+    "SKU": "PP425",
+    "product_name": "Trash Bags Clear, 33\" x 39\" (250/Box",
+    "location": "A1-01B-03"
+  },
+  {
+    "SKU": "PP450",
+    "product_name": "Trash Bags Black, 44\" x 55\" (100/Box",
+    "location": "A1-01A-01"
+  },
+  {
+    "SKU": "PP455",
+    "product_name": "Trash Bags Black, 43\" x 47\" (100/Box",
+    "location": "A1-01A-02"
+  },
+  {
+    "SKU": "FP120",
+    "product_name": "Trash Bags, Sanitary Napkin Liners, 12\" x 6\" (500/Box",
+    "location": "A1-02C-01"
+  },
+  {
+    "SKU": "PP335",
+    "product_name": "Deli Paper 10\" x 10.75\" (500/Box",
+    "location": "A1-02C-02"
+  },
+  {
+    "SKU": "FP105",
+    "product_name": "Tampon Procter and Gamble (Each",
+    "location": "A1-02C-03"
+  },
+  {
+    "SKU": "FP115",
+    "product_name": "Maxi Pad Gards, Hospitality Specialty Co. (Each",
+    "location": "A1-02C-04"
+  },
+  {
+    "SKU": "PP460",
+    "product_name": "Trash Bags Black, 49\" x 53\" (75/Box",
+    "location": "A1-02B-01"
+  },
+  {
+    "SKU": 60707,
+    "product_name": "Trash Bags Black 58\" x 38\" (100 Box",
+    "location": "A1-02B-02"
+  },
+  {
+    "SKU": "PP400",
+    "product_name": "Trash Bags Clear, 27\" x 35\" (500/Box",
+    "location": "A1-02A-01"
+  },
+  {
+    "SKU": "PP420",
+    "product_name": "Trash Bags Clear, 24\" x 33\" (1000/Box",
+    "location": "A1-02A-02"
+  },
+  {
+    "SKU": 49618,
+    "product_name": "8 oz Disposable Beverage Cups For Hot or Cold Drinks (Each Box",
+    "location": "A1-03C-01"
+  },
+  {
+    "SKU": "PP205",
+    "product_name": "5 oz Disposable Beverage Cups For Cold Drinks Each Box 5 0z Disposable Beverage Cups For Cold Drinks (Each Box",
+    "location": "A1-03C-02"
+  },
+  {
+    "SKU": "PP211",
+    "product_name": "9 oz Disposable Beverage Cups For Cold Drinks (Each Box",
+    "location": "A1-03C-03"
+  },
+  {
+    "SKU": "PP131",
+    "product_name": "Facial Tissue, Victoria Bay Rectangular Box (Each Tissue Box",
+    "location": "A1-03C-04"
+  },
+  {
+    "SKU": 63747,
+    "product_name": "Baby Wipe Huggies, Unscented Tubs",
+    "location": "A1-03B-01"
+  },
+  {
+    "SKU": "PP101",
+    "product_name": "Facial Tissue, Kleenex Cardboard Cube (Each",
+    "location": "A1-03B-02"
+  },
+  {
+    "SKU": "PP328",
+    "product_name": "Napkin, Luncheon White Paper 12PK/CS Napkin, Luncheon White Paper 12PK/CS Napkin, Luncheon White Paper 12PK/CS",
+    "location": "A1-03B-03"
+  },
+  {
+    "SKU": "PP320",
+    "product_name": "WypAll, All-Purpose Wipes, White (Each Pack",
+    "location": "A1-03A-01"
+  },
+  {
+    "SKU": "PP315",
+    "product_name": "WypAll, Wipes Kimberly-Clark (Each Box",
+    "location": "A1-03A-02"
+  }
+]
