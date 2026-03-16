@@ -35,10 +35,38 @@ export default function StaffScreen() {
     .filter((o) => o.assignedToId === user.id && String(o.status).trim() === "delivered")
     .slice(0, 10);
 
+  const onLogoutPressed = () => {
+    router.replace("/welcome");
+    //logout();
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F5F7" }}>
       <View style={{ paddingTop: 18, paddingHorizontal: 24, paddingBottom: 12 }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold" }}>Staff</Text>
+        <View style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: 10
+          }}>
+            <Text style={{ fontSize: 24, fontWeight: "bold" }}>Staff</Text>
+            <TouchableOpacity
+              onPress={() => onLogoutPressed()}
+              style={{
+                marginTop: 10,
+                backgroundColor: "#fff",
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#ddd",
+                alignSelf: "flex-start",
+              }}
+            >
+              <Text style={{ fontWeight: "800" }}>Logout</Text>
+            </TouchableOpacity>
+        </View>
+        
 
         <TouchableOpacity
           onPress={() => router.replace("/janitorial")}

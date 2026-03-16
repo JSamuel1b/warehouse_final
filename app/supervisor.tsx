@@ -7,7 +7,7 @@ const WELCOME = "/welcome" as any;
 
 export default function SupervisorScreen() {
   const router = useRouter();
-  const { user, isHydrated } = useUser();
+  const { user, isHydrated, logout } = useUser();
   const { orders } = useOrders();
 
   if (!isHydrated) {
@@ -30,9 +30,36 @@ export default function SupervisorScreen() {
     delivered: orders.filter((o) => String(o.status).trim() === "delivered").length,
   };
 
+  const onLogoutPressed = () => {
+    router.replace("/welcome");
+    //logout();
+  }
+
   return (
     <ScrollView style={{ flex: 1, padding: 24, backgroundColor: "#F5F5F7" }}>
-      <Text style={{ fontSize: 24, fontWeight: "800" }}>Supervisor</Text>
+      <View style={{
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <Text style={{ fontSize: 24, fontWeight: "800" }}>Supervisor</Text>
+        <TouchableOpacity
+        onPress={() => onLogoutPressed()}
+        style={{
+          marginTop: 10,
+          backgroundColor: "#fff",
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          borderRadius: 12,
+          borderWidth: 1,
+          borderColor: "#ddd",
+          alignSelf: "flex-start",
+        }}
+      >
+        <Text style={{ fontWeight: "800" }}>Logout</Text>
+      </TouchableOpacity>
+      </View>
+      
 
       <TouchableOpacity
         onPress={() => router.replace("/janitorial")}

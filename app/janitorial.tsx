@@ -179,6 +179,11 @@ export default function JanitorialScreen() {
           }).length
       : 0;
 
+  const onLogoutPressed = () => {
+    router.replace("/welcome");
+    //logout();
+  }
+
   return (
     <View style={{ flex: 1, backgroundColor: "#F5F5F7" }}>
       {/* TOP BAR */}
@@ -190,7 +195,29 @@ export default function JanitorialScreen() {
           backgroundColor: "#F5F5F7",
         }}
       >
-        <Text style={{ fontSize: 24, fontWeight: "bold" }}>Janitorial Area</Text>
+        <View style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginTop: 10
+          }}>
+            <Text style={{ fontSize: 24, fontWeight: "bold" }}>Janitorial Area</Text>
+            <TouchableOpacity
+              onPress={() => onLogoutPressed()}
+              style={{
+                marginTop: 10,
+                backgroundColor: "#fff",
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: "#ddd",
+                alignSelf: "flex-start",
+              }}
+            >
+              <Text style={{ fontWeight: "800" }}>Logout</Text>
+            </TouchableOpacity>
+        </View>
 
         {/* Tabs */}
         <View style={{ flexDirection: "row", gap: 8, marginTop: 10, flexWrap: "wrap" }}>

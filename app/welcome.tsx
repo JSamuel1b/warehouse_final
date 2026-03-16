@@ -3,16 +3,21 @@ import { useMemo, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { UserRole, useUser } from "../lib/userStore";
 import { DeptHead, searchDeptHeads } from "../lib/usersDirectory";
+import { ShowSuccessMessage } from "@/utils/toast-message.service";
 
 export default function Welcome() {
   const router = useRouter();
-  const { setUser } = useUser();
+  const { setUser, login } = useUser();
 
   const [role, setRole] = useState<UserRole>("physical_consumer");
+  //const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
 
   // Common fields
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+
 
   // Kiosk selection
   const [dhQuery, setDhQuery] = useState("");
@@ -68,26 +73,38 @@ const goNext = async () => {
   }
 
   // Normal roles
-  if (!name.trim()) {
-    alert("Enter your name.");
+  if (!username.trim()) {
+    alert("Enter your username.");
     return;
   }
-  if (needsDept && !department.trim()) {
-    alert("Enter your department.");
+  if (!password.trim()) {
+    alert("Enter your password.");
     return;
   }
 
-  await setUser({
-    id: `u_${Date.now()}`,
-    role,
-    name: name.trim(),
-    department: needsDept ? department.trim() : "",
-  });
+  // if (needsDept && !department.trim()) {
+  //   alert("Enter your department.");
+  //   return;
+  // }
 
-  if (role === "dept_head") router.replace("/janitorial");
-  else if (role === "staff") router.replace("/staff");
-  else if (role === "supervisor") router.replace("/supervisor");
-  else router.replace("/janitorial");
+  // await setUser({
+  //   id: `u_${Date.now()}`,
+  //   role,
+  //   name: name.trim(),
+  //   department: needsDept ? department.trim() : "",
+  // });
+
+  const loginResponse = await login({username: username, password: password});
+
+  if (loginResponse)
+  {
+    ShowSuccessMessage(`Welcome ${loginResponse.name}`);
+
+    if (loginResponse.role === "dept_head") router.replace("/janitorial");
+    else if (loginResponse.role === "staff") router.replace("/staff");
+    else if (loginResponse.role === "supervisor") router.replace("/supervisor");
+    else router.replace("/janitorial");
+  }
 };
 
 const Pill = ({ label, value }: { label: string; value: UserRole }) => (
@@ -98,6 +115,7 @@ const Pill = ({ label, value }: { label: string; value: UserRole }) => (
         setDhQuery("");
         setSelectedDeptHead(null);
         setDeptHeadIdInput("");
+        //setShowLoginModal(true);
       }}
       style={{
         backgroundColor: role === value ? "#111" : "#fff",
@@ -227,11 +245,12 @@ const Pill = ({ label, value }: { label: string; value: UserRole }) => (
         </>
       ) : (
         <>
-          <Text style={{ marginTop: 18, fontWeight: "800" }}>Your name</Text>
+          <Text style={{ marginTop: 18, fontWeight: "800" }}>Username</Text>
           <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Ex: John Smith"
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Ex: jsmith"
+            autoCapitalize="none"
             style={{
               marginTop: 8,
               borderWidth: 1,
@@ -242,7 +261,24 @@ const Pill = ({ label, value }: { label: string; value: UserRole }) => (
             }}
           />
 
-          {needsDept ? (
+          <Text style={{ marginTop: 18, fontWeight: "800" }}>Password</Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={true}
+            placeholder="********"
+            autoCapitalize="none"
+            style={{
+              marginTop: 8,
+              borderWidth: 1,
+              borderColor: "#ddd",
+              borderRadius: 12,
+              padding: 12,
+              backgroundColor: "#fff",
+            }}
+          />
+
+          {/* {needsDept ? (
             <>
               <Text style={{ marginTop: 14, fontWeight: "800" }}>Department</Text>
               <TextInput
@@ -259,11 +295,11 @@ const Pill = ({ label, value }: { label: string; value: UserRole }) => (
                 }}
               />
             </>
-          ) : null}
+          ) : null} */}
         </>
       )}
 
-            <TouchableOpacity
+        <TouchableOpacity
         onPress={goNext}
         style={{
           marginTop: 18,
