@@ -2,15 +2,10 @@ export type DeptHead = {
   id: string;
   name: string;
   department: string;
+  departmentId?: number;
 };
 
-const DEPT_HEADS: DeptHead[] = [
-  { id: "dh_1001", name: "Mark King", department: "MK" },
-  { id: "dh_1002", name: "Sarah Lopez", department: "Custodial" },
-  { id: "dh_1003", name: "John Rivera", department: "Maintenance" },
-];
-
-export function searchDeptHeads(query: string): DeptHead[] {
+export function searchDeptHeads(query: string, DEPT_HEADS: DeptHead[]): DeptHead[] {
   const q = (query || "").trim().toLowerCase();
   if (!q) return DEPT_HEADS;
 

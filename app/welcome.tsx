@@ -1,9 +1,10 @@
 import { useRouter } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Text, TextInput, TouchableOpacity, View } from "react-native";
 import { UserRole, useUser } from "../lib/userStore";
 import { DeptHead, searchDeptHeads } from "../lib/usersDirectory";
-import { ShowSuccessMessage } from "@/utils/toast-message.service";
+import { ShowInfoMessage, ShowSuccessMessage } from "@/utils/toast-message.service";
+import { GetDeptHeadsRequest } from "@/services/user-service";
 
 export default function Welcome() {
   const router = useRouter();
@@ -18,59 +19,78 @@ export default function Welcome() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-
   // Kiosk selection
   const [dhQuery, setDhQuery] = useState("");
   const [selectedDeptHead, setSelectedDeptHead] = useState<DeptHead | null>(null);
   const [deptHeadIdInput, setDeptHeadIdInput] = useState("");
+  const [deptHeads, setDeptHeads] = useState<DeptHead[]>([]);
 
   const isKiosk = role === "physical_consumer";
   const needsDept = role === "dept_head";
 
+  useEffect(() => {
+    loadDeptHeads();
+  },[]);
+
+  const loadDeptHeads = async () => {
+    const response = await GetDeptHeadsRequest();
+
+    if (typeof(response) != "string")
+    {
+      setDeptHeads(response);
+    }
+    else{
+      ShowInfoMessage(response);
+    }
+  }
+
   const deptHeadResults = useMemo<DeptHead[]>(() => {
-  const res = searchDeptHeads(dhQuery);
-  return Array.isArray(res) ? res.slice(0, 8) : [];
-}, [dhQuery]);
+    const res = searchDeptHeads(dhQuery, deptHeads);
+    return Array.isArray(res) ? res.slice(0, 8) : [];
+  }, [dhQuery]);
 
   // Button behavior you requested:
   // - Grey only when ID input is empty (kiosk)
   // - Black as soon as they typed something
   const buttonEnabled = useMemo(() => {
-    if (!isKiosk) return true;
-    return deptHeadIdInput.trim().length > 0;
-  }, [isKiosk, deptHeadIdInput]);
+      if (!isKiosk) return true;
+      return deptHeadIdInput.trim().length > 0;
+    }, [isKiosk, deptHeadIdInput]);
 
-const goNext = async () => {
-  if (isKiosk) {
-    if (!name.trim()) {
-      alert("Enter your name (pickup name).");
+  const goNext = async () => {
+    if (isKiosk) {
+      if (!name.trim()) {
+        alert("Enter your name (pickup name).");
+        return;
+      }
+
+      if (!selectedDeptHead) {
+        alert("Select a department head.");
+        return;
+      }
+
+      const matches =
+        deptHeadIdInput.trim().toLowerCase() ===
+        selectedDeptHead.departmentId?.toString().trim().toLowerCase();
+
+      if (!matches) {
+        alert("Wrong dept head Id!");
+        return;
+      }
+
+      await setUser({
+        id: `kiosk_${Date.now()}`,
+        role: "physical_consumer",
+        name: name.trim(), // pickedByName
+
+        actingDeptHeadId: selectedDeptHead.id,
+        actingDeptHeadName: selectedDeptHead.name,
+        actingDeptHeadDepartment: selectedDeptHead.department,
+      });
+
+      router.replace("/janitorial");
       return;
     }
-    if (!selectedDeptHead) {
-      alert("Select a department head.");
-      return;
-    }
-
-    const matches =
-      deptHeadIdInput.trim().toLowerCase() ===
-      selectedDeptHead.id.trim().toLowerCase();
-
-    if (!matches) {
-      return;
-    }
-    await setUser({
-      id: `kiosk_${Date.now()}`,
-      role: "physical_consumer",
-      name: name.trim(), // pickedByName
-
-      actingDeptHeadId: selectedDeptHead.id,
-      actingDeptHeadName: selectedDeptHead.name,
-      actingDeptHeadDepartment: selectedDeptHead.department,
-    });
-
-    router.replace("/janitorial");
-    return;
-  }
 
   // Normal roles
   if (!username.trim()) {
@@ -115,7 +135,6 @@ const Pill = ({ label, value }: { label: string; value: UserRole }) => (
         setDhQuery("");
         setSelectedDeptHead(null);
         setDeptHeadIdInput("");
-        //setShowLoginModal(true);
       }}
       style={{
         backgroundColor: role === value ? "#111" : "#fff",
@@ -191,7 +210,7 @@ const Pill = ({ label, value }: { label: string; value: UserRole }) => (
                   onPress={() => {
                     setSelectedDeptHead(d);
                     setDeptHeadIdInput("");
-                  }}
+                  }} 
                   style={{
                     marginTop: 8,
                     backgroundColor: selected ? "#111" : "#fff",

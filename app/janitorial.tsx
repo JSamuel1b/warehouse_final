@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  RefreshControl,
   ScrollView,
   Text,
   TextInput,
@@ -8,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { clearDraft, loadDraft, saveDraft } from "../lib/draftStorage";
-import { janitorialFromJson } from "../lib/loadJanitorialInventory";
+import { janitorialFromAPI, JanitorialJsonItem } from "../lib/loadJanitorialInventory";
 import { useOrders } from "../lib/ordersStore";
 import { useTools } from "../lib/toolStore";
 import { useUser } from "../lib/userStore";
@@ -25,10 +26,21 @@ export default function JanitorialScreen() {
   const [lastRequest, setLastRequest] = useState("");
   const [pendingItem, setPendingItem] = useState<any | null>(null);
   const [qty, setQty] = useState("1");
+  const [inventoryItems, setInventoryItems] = useState<JanitorialJsonItem[]>([]);
+  const [refreshing, setRefreshing ] = useState<boolean>(false);
 
   const [requests, setRequests] = useState<
     { sku: string; name: string; qty: string }[]
   >([]);
+
+  const loadInventoryFromApi = async () =>{
+    setRefreshing(true);
+
+    const items = await janitorialFromAPI();
+
+    setInventoryItems(items);
+    setRefreshing(false);
+  }
 
   // ----------------------------
   // Guard: hydrate -> if no user, go welcome
@@ -37,6 +49,8 @@ export default function JanitorialScreen() {
     if (!isHydrated) return;
     const WELCOME = "/welcome" as any;
     if (!user) router.replace(WELCOME);
+
+    loadInventoryFromApi();
   }, [isHydrated, user, router]);
 
   // ----------------------------
@@ -84,11 +98,11 @@ export default function JanitorialScreen() {
   // ----------------------------
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return janitorialFromJson;
-    return janitorialFromJson.filter((item) =>
+    if (!q) return inventoryItems;
+    return inventoryItems.filter((item) =>
       item.product_name.toLowerCase().includes(q)
     );
-  }, [query]);
+  }, [query, inventoryItems]);
 
   const updateRequestQty = (sku: string, nextQty: string) => {
     setRequests((prev) =>
@@ -370,6 +384,7 @@ export default function JanitorialScreen() {
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => loadInventoryFromApi()} />}
       >
         {/* Requests */}
         {requests.length ? (
@@ -475,7 +490,7 @@ export default function JanitorialScreen() {
         ) : null}
 
         {/* Inventory list */}
-        {user.role !== "supervisor"
+        {user.role !== "supervisor" && user.role !== "staff"
           ? filtered.map((item) => (
               <View
                 key={String(item.SKU)}
@@ -558,7 +573,7 @@ export default function JanitorialScreen() {
       </ScrollView>
 
       {/* BOTTOM BAR */}
-      {user.role !== "supervisor" ? (
+      {user.role !== "supervisor" && user.role !== "staff" ? (
         <View
           style={{
             position: "absolute",
