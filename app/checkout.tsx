@@ -203,7 +203,7 @@ const { createOrder, createPhysicalPickup, setReorderDraft } = useOrders();
             paddingHorizontal: 16,
             borderRadius: 14,
           }}
-         onPress={() => {
+         onPress={ async () => {
   if (!items.length) return;
   if (!user) return;
 
@@ -235,9 +235,9 @@ const { createOrder, createPhysicalPickup, setReorderDraft } = useOrders();
   }
 
   // ✅ ONLINE (dept head, supervisor, etc.)
-  createOrder(items, user);
+  await createOrder(items, user);
 
-  alert("Order confirmed ✅");
+  //alert("Order confirmed ✅");
 
   router.replace({
     pathname: "/janitorial",

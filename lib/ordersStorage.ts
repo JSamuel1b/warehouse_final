@@ -1,15 +1,56 @@
 // /lib/ordersStorage.ts
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { Order } from "./ordersStore";
+import type { Order, OrderItem, OrderKind, OrderStatus } from "./ordersStore";
+import { LoadOrdersFromAPIRequest } from "@/services/order-service";
+import { ShowInfoMessage } from "@/utils/toast-message.service";
 
 const ORDERS_KEY = "janitorial_orders_v1";
 const NEXT_NUM_KEY = "janitorial_next_order_number_v1";
 
 export async function loadOrders(): Promise<Order[]> {
   try {
-    const raw = await AsyncStorage.getItem(ORDERS_KEY);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
+    const apiResponse = await LoadOrdersFromAPIRequest();
+
+    if (typeof(apiResponse) !== "string")
+    {
+      if(apiResponse.length == 0)
+      {
+        return [];
+      }
+
+      let orders = apiResponse.map((x) => {
+        let orderModel : Order = {
+          createdAt: x.createdAt,
+          id: x.id.toString(),
+          items: x.items.map((item) => {
+            return { name: item.inventoryItemName, qty: item.quantity.toString(), sku: item.inventoryItemSKU } as OrderItem;
+            }),
+          kind: x.kind as OrderKind,
+          requesterId: x.requestedId ?? "",
+          requesterName: x.receivedByName ?? "",
+          requesterRole: x.requesterRole,
+          status: x.status as OrderStatus,
+          updatedAt: x.updatedAt,
+          assignedToId: x.assignedToId ?? "",
+          assignedToName: x.assignedToName ?? "",
+          pickedByName: x.pickedByName ?? "",
+          receivedAt: x.receivedAt ?? "",
+          receivedByName: x.receivedByName ?? "",
+          requesterDepartment: x.requesterDepartment
+        };
+
+        return orderModel;
+      });
+
+      return orders;
+    }
+    else{
+      ShowInfoMessage(apiResponse);
+      return [];
+    }
+    // const raw = await AsyncStorage.getItem(ORDERS_KEY);
+    // const parsed = raw ? JSON.parse(raw) : [];
+    // return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }

@@ -11,6 +11,13 @@ import {
   saveNextOrderNumber,
   saveOrders,
 } from "./ordersStorage";
+import { CreateOrderDto, CreateOrderItemDto } from "@/models/orders/requests/create-order";
+import { AssignOrderToUserRequest, ConfirmOrderReceivedRequest, CreateOrderRequest, UnassignOrderRequest, UpdateOrderStatusRequest } from "@/services/order-service";
+import { ShowErrorMessage, ShowSuccessMessage } from "@/utils/toast-message.service";
+import { AssignOrderDto } from "@/models/orders/requests/assign-order";
+import { UnassignOrderDto } from "@/models/orders/requests/unassign-order";
+import { UpdateStatusDto } from "@/models/orders/requests/update-order-status";
+import { ConfirmOrderReceivedDto } from "@/models/orders/requests/confirm-order-received";
 
 /* ---------------- TYPES ---------------- */
 
@@ -119,6 +126,11 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  const updateData = async () => {
+    const storedOrders = await loadOrders();
+    setOrders(storedOrders);
+  }
+
   // Persist orders
   useEffect(() => {
     if (!isHydrated) return;
@@ -136,7 +148,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
       orders,
 
       // ✅ ONLINE ORDER
-      createOrder: (items, requester) => {
+      createOrder: async (items, requester) => {
         const now = new Date().toISOString();
         const id = formatOrderId(nextOrderNumber);
 
@@ -159,12 +171,37 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
           receivedAt: undefined,
         };
 
-        setOrders((prev) => [order, ...prev]);
-        setNextOrderNumber((n) => n + 1);
+        const request: CreateOrderDto = {
+          requestedId: requester.id,
+          createdAt: now,
+          kind: "online",
+          pickedByName: null,
+          receivedAt: null,
+          receivedByName: null,
+          assignedToId: null,
+          status: "pending",
+          items: items.map(x =>{
+            return {sKU: x.sku, quantity: +x.qty} as CreateOrderItemDto
+            })
+        };
+
+        const createResponse = await CreateOrderRequest(request);
+
+        if(typeof(createResponse) === "number")
+        {
+          ShowSuccessMessage("Order created successfully");
+          await updateData();
+        }
+        else{
+          ShowErrorMessage(createResponse);
+        }
+
+        // setOrders((prev) => [order, ...prev]);
+        // setNextOrderNumber((n) => n + 1);
       },
 
       // ✅ PHYSICAL PICKUP (KIOSK) -> CLOSED IMMEDIATELY (delivered)
-      createPhysicalPickup: (items, owner, pickedByName) => {
+      createPhysicalPickup: async (items, owner, pickedByName) => {
         const now = new Date().toISOString();
         const id = formatOrderId(nextOrderNumber);
 
@@ -184,100 +221,206 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
           pickedByName: (pickedByName || "").trim(),
         };
 
-        setOrders((prev) => [order, ...prev]);
-        setNextOrderNumber((n) => n + 1);
+        const request: CreateOrderDto = {
+          requestedId: owner.id,
+          createdAt: now,
+          kind: "physical",
+          status: "delivered",
+          pickedByName: (pickedByName || "").trim(),
+          receivedAt: null,
+          receivedByName: null,
+          assignedToId: null,
+          
+          items: items.map(x =>{
+            return {sKU: x.sku, quantity: +x.qty} as CreateOrderItemDto
+            })
+        };
+
+        const createResponse = await CreateOrderRequest(request);
+
+        if(typeof(createResponse) === "number")
+        {
+          ShowSuccessMessage("Order created successfully");
+          await updateData();
+        }
+        else{
+          ShowErrorMessage(createResponse);
+        }
+
+        // setOrders((prev) => [order, ...prev]);
+        // setNextOrderNumber((n) => n + 1);
       },
 
       // ✅ STAFF ASSIGN (guarded)
-      assignOrderToUser: (orderId, userId, userName) => {
-        setOrders((prev) =>
-          prev.map((o) => {
-            if (o.id !== orderId) return o;
+      assignOrderToUser: async (orderId, userId, userName) => {
+        // setOrders((prev) =>
+        //   prev.map((o) => {
+        //     if (o.id !== orderId) return o;
 
-            // ✅ Only online orders can be assigned
-            if (o.kind !== "online") return o;
+        //     // ✅ Only online orders can be assigned
+        //     if (o.kind !== "online") return o;
 
-            // ✅ Only assign if still pending
-            if (String(o.status).trim() !== "pending") return o;
+        //     // ✅ Only assign if still pending
+        //     if (String(o.status).trim() !== "pending") return o;
 
-            // ✅ Prevent double assignment
-            if (o.assignedToId) return o;
+        //     // ✅ Prevent double assignment
+        //     if (o.assignedToId) return o;
 
-            return {
-              ...o,
-              assignedToId: userId,
-              assignedToName: userName,
-              status: "processing",
-              updatedAt: new Date().toISOString(),
-            };
-          })
-        );
+        //     return {
+        //       ...o,
+        //       assignedToId: userId,
+        //       assignedToName: userName,
+        //       status: "processing",
+        //       updatedAt: new Date().toISOString(),
+        //     };
+        //   })
+        // );
+
+        const request : AssignOrderDto = {
+          orderId: +orderId,
+          updatedAt: new Date().toISOString(),
+          updatedBy: userId,
+          username: userId
+        }
+
+        const apiResponse = await AssignOrderToUserRequest(request);
+
+        if(typeof(apiResponse) !== "string")
+        {
+          ShowSuccessMessage("Order assigned successfully");
+          await updateData();
+        }else{
+          ShowErrorMessage(apiResponse);
+        }
+
       },
 
       // ✅ STAFF RELEASE (guarded)
-      unassignOrder: (orderId: string, userId: string) => {
-        setOrders((prev) =>
-          prev.map((o) => {
-            if (o.id !== orderId) return o;
+      unassignOrder: async (orderId: string, userId: string) => {
+        // setOrders((prev) =>
+        //   prev.map((o) => {
+        //     if (o.id !== orderId) return o;
 
-            // ✅ Only the assigned staff can release it
-            if (o.assignedToId !== userId) return o;
+        //     // ✅ Only the assigned staff can release it
+        //     if (o.assignedToId !== userId) return o;
 
-            // ✅ Only allow release while processing
-            if (String(o.status).trim() !== "processing") return o;
+        //     // ✅ Only allow release while processing
+        //     if (String(o.status).trim() !== "processing") return o;
 
-            return {
-              ...o,
-              assignedToId: undefined,
-              assignedToName: undefined,
-              status: "pending",
-              updatedAt: new Date().toISOString(),
-            };
-          })
-        );
+        //     return {
+        //       ...o,
+        //       assignedToId: undefined,
+        //       assignedToName: undefined,
+        //       status: "pending",
+        //       updatedAt: new Date().toISOString(),
+        //     };
+        //   })
+        // );
+
+        const request: UnassignOrderDto = {
+          orderId: +orderId,
+          updatedBy: userId,
+          updatedAt: new Date().toISOString()
+        }
+
+        const apiResponse = await UnassignOrderRequest(request);
+
+        if(typeof(apiResponse) !== "string")
+        {
+          ShowSuccessMessage("Order unassigned successfully");
+          await updateData();
+        }else{
+          ShowErrorMessage(apiResponse);
+        }
       },
 
       // ✅ STAFF NEXT STEP (guarded)
-      updateOrderStatus: (id, userId) => {
-        setOrders((prev) =>
-          prev.map((o) => {
-            if (o.id !== id) return o;
-            if (o.kind !== "online") return o;
+      updateOrderStatus: async (id, userId) => {
+        // setOrders((prev) =>
+        //   prev.map((o) => {
+        //     if (o.id !== id) return o;
+        //     if (o.kind !== "online") return o;
 
-            // ✅ Only assigned staff can move it forward
-            if (!o.assignedToId || o.assignedToId !== userId) return o;
+        //     // ✅ Only assigned staff can move it forward
+        //     if (!o.assignedToId || o.assignedToId !== userId) return o;
 
-            const nextStatus: OrderStatus =
-              o.status === "pending"
+        //     const nextStatus: OrderStatus =
+        //       o.status === "pending"
+        //         ? "processing"
+        //         : o.status === "processing"
+        //         ? "awaiting_confirmation"
+        //         : o.status;
+
+        //     return { ...o, status: nextStatus, updatedAt: new Date().toISOString() };
+        //   })
+        // );
+
+        let orderToUpdate = orders.find(x => x.id === id);
+
+        if(orderToUpdate)
+        {
+          const nextStatus: OrderStatus =
+              orderToUpdate.status === "pending"
                 ? "processing"
-                : o.status === "processing"
+                : orderToUpdate.status === "processing"
                 ? "awaiting_confirmation"
-                : o.status;
+                : orderToUpdate.status;
 
-            return { ...o, status: nextStatus, updatedAt: new Date().toISOString() };
-          })
-        );
+            const request: UpdateStatusDto = {
+              orderId: +id,
+              status: nextStatus,
+              updatedAt: new Date().toISOString(),
+              updatedBy: userId
+            }
+
+            const apiResponse = await UpdateOrderStatusRequest(request);
+
+            if(typeof(apiResponse) !== "string")
+            {
+              ShowSuccessMessage("Order status updated successfully");
+              await updateData();
+            }else{
+              ShowErrorMessage(apiResponse);
+            }
+          }
       },
 
       // ✅ DEPT HEAD CONFIRM RECEIVED (online only)
-      confirmOrderReceived: (id: string, receivedByName: string) => {
+      confirmOrderReceived: async (id: string, receivedByName: string) => {
         const now = new Date().toISOString();
-        setOrders((prev) =>
-          prev.map((o) => {
-            if (o.id !== id) return o;
+        // setOrders((prev) =>
+        //   prev.map((o) => {
+        //     if (o.id !== id) return o;
 
-            const st = String(o.status).trim();
-            if (st !== "awaiting_confirmation") return o;
+        //     const st = String(o.status).trim();
+        //     if (st !== "awaiting_confirmation") return o;
 
-            return {
-              ...o,
-              status: "delivered",
-              receivedByName,
-              receivedAt: now,
-              updatedAt: now,
-            };
-          })
-        );
+        //     return {
+        //       ...o,
+        //       status: "delivered",
+        //       receivedByName,
+        //       receivedAt: now,
+        //       updatedAt: now,
+        //     };
+        //   })
+        // );
+
+        const request: ConfirmOrderReceivedDto = {
+          orderId: +id,
+          receivedByName: receivedByName,
+          updatedAt: now,
+          updatedBy: receivedByName
+        };
+
+        const apiResponse = await ConfirmOrderReceivedRequest(request);
+
+        if(typeof(apiResponse) !== "string")
+        {
+          ShowSuccessMessage("Order status updated successfully");
+          await updateData();
+        }else{
+          ShowErrorMessage(apiResponse);
+        }
       },
 
       reorderDraft,
