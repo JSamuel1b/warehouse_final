@@ -3,6 +3,7 @@ export type DeptHead = {
   name: string;
   department: string;
   departmentId?: number;
+  pinCode?: string;
 };
 
 export function searchDeptHeads(query: string, DEPT_HEADS: DeptHead[]): DeptHead[] {

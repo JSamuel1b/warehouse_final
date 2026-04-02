@@ -15,7 +15,8 @@ export const GetDeptHeadsRequest = async () : Promise<DeptHead[] | string> => {
                     id: x.username,
                     departmentId: x.departmentId ?? 0,
                     department: x.departmentName ?? "",
-                    name: `${x.firstName} ${x.lastName}`
+                    name: `${x.firstName} ${x.lastName}`,
+                    pinCode: x.departmentPinCode ?? undefined
                     };
 
                 return deptHead;

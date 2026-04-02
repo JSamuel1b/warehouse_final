@@ -7,4 +7,5 @@ export interface UserDto {
     roleName: string;
     departmentId: number | null;
     departmentName: string | null;
+    departmentPinCode: string | null;
 }

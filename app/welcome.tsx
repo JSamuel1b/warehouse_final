@@ -71,10 +71,10 @@ export default function Welcome() {
 
       const matches =
         deptHeadIdInput.trim().toLowerCase() ===
-        selectedDeptHead.departmentId?.toString().trim().toLowerCase();
+        selectedDeptHead.pinCode?.toString().trim().toLowerCase();
 
       if (!matches) {
-        alert("Wrong dept head Id!");
+        alert("Wrong dept head pin code!");
         return;
       }
 
@@ -238,13 +238,14 @@ const Pill = ({ label, value }: { label: string; value: UserRole }) => (
               </Text>
 
               <Text style={{ marginTop: 14, fontWeight: "800" }}>
-                Enter Dept Head ID
+                Enter Dept Head Pin Code
               </Text>
               <TextInput
                 value={deptHeadIdInput}
                 onChangeText={setDeptHeadIdInput}
-                placeholder="Ex: dh_1001"
+                placeholder="Ex: XXXX"
                 autoCapitalize="none"
+                maxLength={4}
                 style={{
                   marginTop: 8,
                   borderWidth: 1,

@@ -2,6 +2,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import type { AppUser } from "./userStore";
+import { CheckoutToolRequest, ConfirmToolReturnRequest, GetToolsRequest, InitiateReturnRequest } from "@/services/tool-service";
+import { ShowErrorMessage, ShowSuccessMessage } from "@/utils/toast-message.service";
+import { CheckOutToolDto } from "@/models/tools/requests/checkout-tool";
+import { InitiateReturnDto } from "@/models/tools/requests/initial-return";
+import { ConfirmToolReturnDto } from "@/models/tools/requests/confirm-return";
 
 const TOOLS_KEY = "warehouse_tools_v1";
 
@@ -108,15 +113,30 @@ export function ToolsProvider({ children }: { children: React.ReactNode }) {
   const [tools, setTools] = useState<Tool[]>(SEED_TOOLS);
   const [isHydrated, setIsHydrated] = useState(false);
 
+  const LoadToolsFromAPI = async () => {
+    const toolsResponse = await GetToolsRequest();
+
+    if(typeof(toolsResponse) !== "string")
+    {
+      setTools(toolsResponse);
+    }
+    else{
+      ShowErrorMessage(toolsResponse);
+    }
+  }
+
   // hydrate
   useEffect(() => {
     (async () => {
-      const raw = await storageGet(TOOLS_KEY);
+      //const raw = await storageGet(TOOLS_KEY);
       try {
-        const parsed = raw ? JSON.parse(raw) : null;
-        if (Array.isArray(parsed) && parsed.length) {
-          setTools(parsed);
-        }
+        
+        await LoadToolsFromAPI();
+
+        // const parsed = raw ? JSON.parse(raw) : null;
+        // if (Array.isArray(parsed) && parsed.length) {
+        //   setTools(parsed);
+        // }
       } catch {}
       setIsHydrated(true);
     })();
@@ -146,141 +166,249 @@ export function ToolsProvider({ children }: { children: React.ReactNode }) {
     () => ({
       tools,
 
-      checkoutTool: (toolId, user, locationOfUse, expectedDuration) => {
+      checkoutTool: async (toolId, user, locationOfUse, expectedDuration) => {
         const now = new Date().toISOString();
-        setTools((prev) =>
-          prev.map((t) => {
-            if (t.id !== toolId) return t;
-            if (t.status !== "available") return t;
 
-            const durationText = expectedDuration.trim();
-const parsedDays = (() => {
-  const m = durationText.match(/(\d+)\s*(day|days|d)\b/i);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
-})();
+        const durationText = expectedDuration.trim();
+        
+        const parsedDays = (() => {
+        const m = durationText.match(/(\d+)\s*(day|days|d)\b/i);
+          if (!m) return null;
+          const n = parseInt(m[1], 10);
+          return Number.isFinite(n) && n > 0 ? n : null;
+        })();
 
-const parsedHours = (() => {
-  const m = durationText.match(/(\d+)\s*(hour|hours|h)\b/i);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  return Number.isFinite(n) && n > 0 ? n : null;
-})();
+        const parsedHours = (() => {
+          const m = durationText.match(/(\d+)\s*(hour|hours|h)\b/i);
+          if (!m) return null;
+          const n = parseInt(m[1], 10);
+          return Number.isFinite(n) && n > 0 ? n : null;
+        })();
 
-const fallbackDays = 1;
-const ms =
-  parsedDays !== null
-    ? parsedDays * 24 * 60 * 60 * 1000
-    : parsedHours !== null
-    ? parsedHours * 60 * 60 * 1000
-    : fallbackDays * 24 * 60 * 60 * 1000;
+        const fallbackDays = 1;
+        const ms =
+          parsedDays !== null
+            ? parsedDays * 24 * 60 * 60 * 1000
+            : parsedHours !== null
+            ? parsedHours * 60 * 60 * 1000
+            : fallbackDays * 24 * 60 * 60 * 1000;
 
-const dueAt = new Date(Date.now() + ms).toISOString();
+        const dueAt = new Date(Date.now() + ms).toISOString();
 
-const ownerDeptHeadId =
-  user.role === "physical_consumer" ? (user.actingDeptHeadId || "") : user.id;
+        const ownerDeptHeadId =
+          user.role === "physical_consumer" ? (user.actingDeptHeadId || "") : user.id;
 
-const ownerDeptHeadName =
-  user.role === "physical_consumer" ? (user.actingDeptHeadName || "") : user.name;
+        // const ownerDeptHeadName =
+        //   user.role === "physical_consumer" ? (user.actingDeptHeadName || "") : user.name;
 
-const ownerDepartment =
-  user.role === "physical_consumer"
-    ? (user.actingDeptHeadDepartment || "")
-    : (user.department || "");
+        // const ownerDepartment =
+        //   user.role === "physical_consumer"
+        //     ? (user.actingDeptHeadDepartment || "")
+        //     : (user.department || "");
 
-const next: Tool = {
-  ...t,
-  status: "checked_out",
+        let isKiosk = user.id.startsWith("kiosk");
 
-  currentHolderUserId: user.id,
-  currentHolderName: user.name,
+        let request: CheckOutToolDto = {
+          checkedOutAt: now,
+          kioskId: isKiosk ? user.id : null,
+          kioskName: isKiosk ? user.name : null,
+          isKioskCheckout: isKiosk,
+          dueAt: dueAt,
+          expectedDuration: expectedDuration.trim(),
+          id: +toolId,
+          locationOfUse: locationOfUse.trim(),
+          ownerUsername: ownerDeptHeadId,
+          currentHolderUsername: isKiosk ? null : user.id
+        };
 
-  ownerDeptHeadId,
-  ownerDeptHeadName,
-  ownerDepartment,
+        console.log(request);
 
-  checkedOutAt: now,
-  dueAt,
+        const response = await CheckoutToolRequest(request);
 
-  locationOfUse: locationOfUse.trim(),
-  expectedDuration: expectedDuration.trim(),
+        if(typeof(response) !== "string")
+        {
+          ShowSuccessMessage("Checkout tool processed successfully");
+          await LoadToolsFromAPI();
+        }
+        else{
+          ShowErrorMessage(response);
+        }
 
-  history: [
-    {
-      type: "checkout",
-      at: now,
-      byUserId: user.id,
-      byName: user.name,
-      locationOfUse: locationOfUse.trim(),
-      expectedDuration: expectedDuration.trim(),
-    },
-    ...t.history,
-  ],
-};
+        // setTools((prev) =>
+        //   prev.map((t) => {
+        //     if (t.id !== toolId) return t;
+        //     if (t.status !== "available") return t;
 
-            return next;
-          })
-        );
+        //     const durationText = expectedDuration.trim();
+            
+        //     const parsedDays = (() => {
+        //       const m = durationText.match(/(\d+)\s*(day|days|d)\b/i);
+        //       if (!m) return null;
+        //       const n = parseInt(m[1], 10);
+        //       return Number.isFinite(n) && n > 0 ? n : null;
+        //     })();
+
+        //     const parsedHours = (() => {
+        //       const m = durationText.match(/(\d+)\s*(hour|hours|h)\b/i);
+        //       if (!m) return null;
+        //       const n = parseInt(m[1], 10);
+        //       return Number.isFinite(n) && n > 0 ? n : null;
+        //     })();
+
+        //     const fallbackDays = 1;
+        //     const ms =
+        //       parsedDays !== null
+        //         ? parsedDays * 24 * 60 * 60 * 1000
+        //         : parsedHours !== null
+        //         ? parsedHours * 60 * 60 * 1000
+        //         : fallbackDays * 24 * 60 * 60 * 1000;
+
+        //     const dueAt = new Date(Date.now() + ms).toISOString();
+
+        //     const ownerDeptHeadId =
+        //       user.role === "physical_consumer" ? (user.actingDeptHeadId || "") : user.id;
+
+        //     const ownerDeptHeadName =
+        //       user.role === "physical_consumer" ? (user.actingDeptHeadName || "") : user.name;
+
+        //     const ownerDepartment =
+        //       user.role === "physical_consumer"
+        //         ? (user.actingDeptHeadDepartment || "")
+        //         : (user.department || "");
+
+        //     const next: Tool = {
+        //       ...t,
+        //       status: "checked_out",
+            
+        //       currentHolderUserId: user.id,
+        //       currentHolderName: user.name,
+            
+        //       ownerDeptHeadId,
+        //       ownerDeptHeadName,
+        //       ownerDepartment,
+            
+        //       checkedOutAt: now,
+        //       dueAt,
+            
+        //       locationOfUse: locationOfUse.trim(),
+        //       expectedDuration: expectedDuration.trim(),
+            
+        //       history: [
+        //         {
+        //           type: "checkout",
+        //           at: now,
+        //           byUserId: user.id,
+        //           byName: user.name,
+        //           locationOfUse: locationOfUse.trim(),
+        //           expectedDuration: expectedDuration.trim(),
+        //         },
+        //         ...t.history,
+        //       ],
+        //     };
+
+        //     return next;
+        //   })
+        // );
       },
 
-      initiateReturn: (toolId, user) => {
+      initiateReturn: async (toolId, user) => {
         const now = new Date().toISOString();
-        setTools((prev) =>
-          prev.map((t) => {
-            if (t.id !== toolId) return t;
-            if (t.status !== "checked_out") return t;
-            if (t.currentHolderUserId !== user.id) return t;
 
-            return {
-              ...t,
-              status: "return_pending",
-              history: [
-                { type: "return_initiated", at: now, byUserId: user.id, byName: user.name },
-                ...t.history,
-              ],
-            };
-          })
-        );
+        let isKiosk = user.id.startsWith("kiosk");
+
+        let request: InitiateReturnDto = {
+          at: now,
+          byUsername: isKiosk ? "" : user.id,
+          toolId: +toolId,
+          kioskId: isKiosk ? user.id : null,
+          kioskName: isKiosk ? user.name : null
+        };
+
+        const response = await InitiateReturnRequest(request);
+
+        if(typeof(response) !== "string")
+        {
+          ShowSuccessMessage("Tool return initiated successfully");
+          await LoadToolsFromAPI();
+        }
+        else{
+          ShowErrorMessage(response);
+        }
+
+        // setTools((prev) =>
+        //   prev.map((t) => {
+        //     if (t.id !== toolId) return t;
+        //     if (t.status !== "checked_out") return t;
+        //     if (t.currentHolderUserId !== user.id) return t;
+
+        //     return {
+        //       ...t,
+        //       status: "return_pending",
+        //       history: [
+        //         { type: "return_initiated", at: now, byUserId: user.id, byName: user.name },
+        //         ...t.history,
+        //       ],
+        //     };
+        //   })
+        // );
       },
 
-      confirmReturn: (toolId, staff, clean) => {
+      confirmReturn: async (toolId, staff, clean) => {
         const now = new Date().toISOString();
-        setTools((prev) =>
-          prev.map((t) => {
-            if (t.id !== toolId) return t;
-            if (t.status !== "return_pending") return t;
 
-            const borrowerUserId = t.currentHolderUserId || "";
-            const borrowerName = t.currentHolderName || "";
+        let request: ConfirmToolReturnDto = {
+          at: now,
+          clean: clean,
+          toolId: +toolId,
+          staffUsername: staff.id
+        };
 
-            return {
-              ...t,
-             status: "available",
-currentHolderUserId: undefined,
-currentHolderName: undefined,
-checkedOutAt: undefined,
-dueAt: undefined,
-ownerDeptHeadId: undefined,
-ownerDeptHeadName: undefined,
-ownerDepartment: undefined,
-locationOfUse: undefined,
-expectedDuration: undefined,
-history: [
-                {
-                  type: "return_confirmed",
-                  at: now,
-                  staffUserId: staff.id,
-                  staffName: staff.name,
-                  borrowerUserId,
-                  borrowerName,
-                  clean: !!clean,
-                },
-                ...t.history,
-              ],
-            };
-          })
-        );
+        const response = await ConfirmToolReturnRequest(request);
+
+        if(typeof(response) !== "string")
+        {
+          ShowSuccessMessage("Tool return initiated successfully");
+          await LoadToolsFromAPI();
+        }
+        else{
+          ShowErrorMessage(response);
+        }
+
+        // setTools((prev) =>
+        //   prev.map((t) => {
+        //     if (t.id !== toolId) return t;
+        //     if (t.status !== "return_pending") return t;
+
+        //     const borrowerUserId = t.currentHolderUserId || "";
+        //     const borrowerName = t.currentHolderName || "";
+
+        //     return {
+        //       ...t,
+        //       status: "available",
+        //       currentHolderUserId: undefined,
+        //       currentHolderName: undefined,
+        //       checkedOutAt: undefined,
+        //       dueAt: undefined,
+        //       ownerDeptHeadId: undefined,
+        //       ownerDeptHeadName: undefined,
+        //       ownerDepartment: undefined,
+        //       locationOfUse: undefined,
+        //       expectedDuration: undefined,
+        //       history: [
+        //         {
+        //           type: "return_confirmed",
+        //           at: now,
+        //           staffUserId: staff.id,
+        //           staffName: staff.name,
+        //           borrowerUserId,
+        //           borrowerName,
+        //           clean: !!clean,
+        //         },
+        //         ...t.history,
+        //       ],
+        //     };
+        //   })
+        // );
       },
 
       reputation,
