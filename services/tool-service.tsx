@@ -4,12 +4,18 @@ import { CheckOutToolDto } from "@/models/tools/requests/checkout-tool";
 import { ConfirmToolReturnDto } from "@/models/tools/requests/confirm-return";
 import { InitiateReturnDto } from "@/models/tools/requests/initial-return";
 import { ToolDto } from "@/models/tools/tool-dto";
-import { API_URL } from "@/utils/api-config";
+import { API_URL, SECRET_KEY } from "@/utils/api-config";
 import axios from "axios";
 
 export const GetToolsRequest = async () : Promise<Tool[] | string> => {
     try {
-        const response = await axios.get<iResponse<ToolDto[]>>(`${API_URL}Tool`);
+        const config = {
+            headers: {
+                "secretKey": SECRET_KEY
+            }
+        }
+
+        const response = await axios.get<iResponse<ToolDto[]>>(`${API_URL}Tool`, config);
 
         if (response.data.succeded)
         {
@@ -99,7 +105,13 @@ export const GetToolsRequest = async () : Promise<Tool[] | string> => {
 
 export const CheckoutToolRequest = async (request: CheckOutToolDto) : Promise<boolean | string> => {
     try {
-        const response = await axios.post<iResponse<boolean>>(`${API_URL}Tool/CheckOut`, request);
+        const config = {
+            headers: {
+                "secretKey": SECRET_KEY
+            }
+        }
+
+        const response = await axios.post<iResponse<boolean>>(`${API_URL}Tool/CheckOut`, request, config);
 
         if(response.data.succeded)
         {
@@ -116,7 +128,13 @@ export const CheckoutToolRequest = async (request: CheckOutToolDto) : Promise<bo
 export const InitiateReturnRequest = async (request: InitiateReturnDto) : Promise<boolean | string> =>
 {
     try {
-        const response = await axios.put<iResponse<boolean>>(`${API_URL}Tool/InitiateReturn`, request);
+        const config = {
+            headers: {
+                "secretKey": SECRET_KEY
+            }
+        }
+
+        const response = await axios.put<iResponse<boolean>>(`${API_URL}Tool/InitiateReturn`, request, config);
 
         if(response.data.succeded)
         {
@@ -133,7 +151,13 @@ export const InitiateReturnRequest = async (request: InitiateReturnDto) : Promis
 export const ConfirmToolReturnRequest = async (request: ConfirmToolReturnDto) : Promise<boolean | string> =>
 {
     try {
-        const response = await axios.put<iResponse<boolean>>(`${API_URL}Tool/ConfirmReturn`, request);
+        const config = {
+            headers: {
+                "secretKey": SECRET_KEY
+            }
+        }
+
+        const response = await axios.put<iResponse<boolean>>(`${API_URL}Tool/ConfirmReturn`, request, config);
 
         if(response.data.succeded)
         {

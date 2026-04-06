@@ -5,12 +5,18 @@ import { CreateOrderDto } from "@/models/orders/requests/create-order";
 import { UnassignOrderDto } from "@/models/orders/requests/unassign-order";
 import { UpdateStatusDto } from "@/models/orders/requests/update-order-status";
 import { iResponse } from "@/models/reponse";
-import { API_URL } from "@/utils/api-config";
+import { API_URL, SECRET_KEY } from "@/utils/api-config";
 import axios from "axios";
 
-export const LoadOrdersFromAPIRequest = async (): Promise<OrderDto[] | string> => {
+export const LoadOrdersFromAPIRequest = async (token: string): Promise<OrderDto[] | string> => {
     try {
-        const response = await axios.get<iResponse<OrderDto[]>>(`${API_URL}order`);
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+
+        const response = await axios.get<iResponse<OrderDto[]>>(`${API_URL}order`, config);
 
         if (response.data.succeded) {
             return response.data.data ?? [];
@@ -25,7 +31,13 @@ export const LoadOrdersFromAPIRequest = async (): Promise<OrderDto[] | string> =
 
 export const CreateOrderRequest = async (request: CreateOrderDto): Promise<number | string> => {
     try {
-        const response = await axios.post<iResponse<number>>(`${API_URL}order`, request);
+        const config = {
+            headers: {
+                "secretKey": SECRET_KEY
+            }
+        }
+
+        const response = await axios.post<iResponse<number>>(`${API_URL}order`, request, config);
 
         if (response.data.succeded) {
             return response.data.data ?? 0;
@@ -38,9 +50,15 @@ export const CreateOrderRequest = async (request: CreateOrderDto): Promise<numbe
     }
 }
 
-export const AssignOrderToUserRequest = async (request: AssignOrderDto): Promise<boolean | string> => {
+export const AssignOrderToUserRequest = async (request: AssignOrderDto, token: string): Promise<boolean | string> => {
     try {
-        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/AssignOrder`, request);
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+
+        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/AssignOrder`, request, config);
 
         if (response.data.succeded) {
             return response.data.data ?? false;
@@ -53,9 +71,15 @@ export const AssignOrderToUserRequest = async (request: AssignOrderDto): Promise
     }
 }
 
-export const UnassignOrderRequest = async (request: UnassignOrderDto): Promise<boolean | string> => {
+export const UnassignOrderRequest = async (request: UnassignOrderDto, token: string): Promise<boolean | string> => {
     try {
-        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/UnassignOrder`, request);
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+
+        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/UnassignOrder`, request, config);
 
         if (response.data.succeded) {
             return response.data.data ?? false;
@@ -68,9 +92,15 @@ export const UnassignOrderRequest = async (request: UnassignOrderDto): Promise<b
     }
 }
 
-export const UpdateOrderStatusRequest = async (request: UpdateStatusDto): Promise<boolean | string> => {
+export const UpdateOrderStatusRequest = async (request: UpdateStatusDto, token: string): Promise<boolean | string> => {
     try {
-        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/UpdateStatus`, request);
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+
+        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/UpdateStatus`, request, config);
 
         if (response.data.succeded) {
             return response.data.data ?? false;
@@ -83,9 +113,15 @@ export const UpdateOrderStatusRequest = async (request: UpdateStatusDto): Promis
     }
 }
 
-export const ConfirmOrderReceivedRequest = async (request: ConfirmOrderReceivedDto): Promise<boolean | string> => {
+export const ConfirmOrderReceivedRequest = async (request: ConfirmOrderReceivedDto, token: string): Promise<boolean | string> => {
     try {
-        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/ConfirmOrderReceived`, request);
+        const config = {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+
+        const response = await axios.put<iResponse<boolean>>(`${API_URL}order/ConfirmOrderReceived`, request, config);
 
         if (response.data.succeded) {
             return response.data.data ?? false;

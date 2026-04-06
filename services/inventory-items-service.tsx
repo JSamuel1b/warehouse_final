@@ -1,11 +1,17 @@
 import { InventoryItem } from "@/models/inventory-item";
 import { iResponse } from "@/models/reponse";
-import { API_URL } from "@/utils/api-config";
+import { API_URL, SECRET_KEY } from "@/utils/api-config";
 import axios from "axios";
 
 export const GetInventoryItemsRequest = async (): Promise<InventoryItem[] | string> => {
     try {
-        const response = await axios.get<iResponse<InventoryItem[]>>(`${API_URL}InventoryItem`);
+        const config = {
+            headers: {
+                "secretKey": SECRET_KEY
+            }
+        }
+
+        const response = await axios.get<iResponse<InventoryItem[]>>(`${API_URL}InventoryItem`, config);
 
         if (response.data.succeded) {
             return response.data.data ?? [];

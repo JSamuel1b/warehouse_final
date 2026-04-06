@@ -18,6 +18,7 @@ import { AssignOrderDto } from "@/models/orders/requests/assign-order";
 import { UnassignOrderDto } from "@/models/orders/requests/unassign-order";
 import { UpdateStatusDto } from "@/models/orders/requests/update-order-status";
 import { ConfirmOrderReceivedDto } from "@/models/orders/requests/confirm-order-received";
+import { useUser } from "./userStore";
 
 /* ---------------- TYPES ---------------- */
 
@@ -115,20 +116,28 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
   const [nextOrderNumber, setNextOrderNumber] = useState<number>(1);
   const [isHydrated, setIsHydrated] = useState(false);
 
+  const { user } = useUser();
+
   // Hydrate
   useEffect(() => {
     (async () => {
-      const storedOrders = await loadOrders();
-      const storedNext = await loadNextOrderNumber();
-      setOrders(storedOrders);
-      setNextOrderNumber(storedNext);
-      setIsHydrated(true);
+      if(user && user.jwtToken)
+      {
+        const storedOrders = await loadOrders(user.jwtToken);
+        const storedNext = await loadNextOrderNumber();
+        setOrders(storedOrders);
+        setNextOrderNumber(storedNext);
+        setIsHydrated(true);
+      }
     })();
-  }, []);
+  }, [user]);
 
   const updateData = async () => {
-    const storedOrders = await loadOrders();
-    setOrders(storedOrders);
+    if(user && user.jwtToken)
+    {
+      const storedOrders = await loadOrders(user.jwtToken);
+      setOrders(storedOrders);
+    }
   }
 
   // Persist orders
@@ -283,7 +292,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
           username: userId
         }
 
-        const apiResponse = await AssignOrderToUserRequest(request);
+        const apiResponse = await AssignOrderToUserRequest(request, user?.jwtToken ?? "");
 
         if(typeof(apiResponse) !== "string")
         {
@@ -323,7 +332,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
           updatedAt: new Date().toISOString()
         }
 
-        const apiResponse = await UnassignOrderRequest(request);
+        const apiResponse = await UnassignOrderRequest(request, user?.jwtToken ?? "");
 
         if(typeof(apiResponse) !== "string")
         {
@@ -373,7 +382,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
               updatedBy: userId
             }
 
-            const apiResponse = await UpdateOrderStatusRequest(request);
+            const apiResponse = await UpdateOrderStatusRequest(request, user?.jwtToken ?? "");
 
             if(typeof(apiResponse) !== "string")
             {
@@ -412,7 +421,7 @@ export function OrdersProvider({ children }: { children: React.ReactNode }) {
           updatedBy: receivedByName
         };
 
-        const apiResponse = await ConfirmOrderReceivedRequest(request);
+        const apiResponse = await ConfirmOrderReceivedRequest(request, user?.jwtToken ?? "");
 
         if(typeof(apiResponse) !== "string")
         {

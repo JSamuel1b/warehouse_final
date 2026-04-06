@@ -7,9 +7,9 @@ import { ShowInfoMessage } from "@/utils/toast-message.service";
 const ORDERS_KEY = "janitorial_orders_v1";
 const NEXT_NUM_KEY = "janitorial_next_order_number_v1";
 
-export async function loadOrders(): Promise<Order[]> {
+export async function loadOrders(token: string): Promise<Order[]> {
   try {
-    const apiResponse = await LoadOrdersFromAPIRequest();
+    const apiResponse = await LoadOrdersFromAPIRequest(token);
 
     if (typeof(apiResponse) !== "string")
     {
